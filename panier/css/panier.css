@@ -1,0 +1,27 @@
+.el-barr{
+    border: 1px solid black;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 16px;
+
+}
+.el-barr:hover{
+    background-color: cyan;
+}
+.el-barr:active{
+    
+}
+#barre{
+    border: 1px solid black;
+}
+#screen{
+    width: 50%;
+    margin: auto;
+    border: 1px solid black;
+}
+#barre{
+    margin-bottom: 10px;
+}
+span + button{
+    margin-left: 70%;;
+}
