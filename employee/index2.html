@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script type="text/javascript" src="js/underscore.js"></script>
+    <script type="text/javascript" src="js/backbone.js"></script>
+    
+    <link rel="stylesheet" href="css/employee.css">
+    <title>Document</title>
+</head>
+<body>
+    
+    <div id="pou">
+    <img id="poubelle" src="img/poubelle.jpg" width="100" height="100"/>
+    </div>
+    <img id="poubel" src="img/moi.jpg" width="100" height="100"/>
+    <table>
+        <tr class="draggable">
+            <td>rien</td>
+        </tr>
+        <tr class="draggable">
+            <td>toto</td>
+        </tr>
+    </table>
+    <script>
+    $('#poubel').draggable({
+        revert: 'invalid',
+        start: (ev, ui)=>{
+            console.log(ev.target);
+        }
+    });
+    $('#pou').droppable({
+        drop: function(ev, ui){
+            console.log(ui.draggable)
+        },
+        
+    });
+
+    $('.draggable').draggable({
+        revert: "invalid",
+        helper: ()=>{
+            return $('<div>bien</div>');
+        },
+        appendTo: 'body',
+        start: (ev, ui)=>{
+            $(ev.target).data('e', {a:1});
+        }
+    })
+ 
+    </script>
+</body>
+</html>

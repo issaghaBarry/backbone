@@ -145,6 +145,11 @@ var ViewArticlePanier = ViewArticle.extend({
     increase(){
         ViewArticle.__super__.putSelected.apply(this, arguments);
     },
+
+    redner(){
+        let content = `<span class="name-arti">${this.model.get('name')}</span`;
+        
+    }
 });
 
 var ViewCatalogue = Backbone.View.extend({

@@ -1,0 +1,51 @@
+td{
+    text-align: left;
+}
+table, td, th{
+    border: 1px solid black;
+    border-collapse: collapse;
+    padding: 2px;
+}
+table{
+    width: 400px;
+}
+div{
+    border: 1px solid black;
+    width: 40%;
+    display: inline-block;
+    padding: 5px;
+    margin-left: 10px;
+}
+
+input, label{
+    margin-bottom: 10px;
+    
+}
+label{
+    margin-left: 10px;
+    display: block;
+    float: left;
+    width: 150px;
+}
+label.sex{
+    display: initial;
+    float: initial;
+    width: initial;
+}
+table{
+    margin :auto;
+}
+div#screen{
+    width: 100%;
+}
+div#poubelle{
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    bottom: 100px;
+    left: 10px;
+}
+button#send{
+    position: relative;
+    left: 200px;;
+}
