@@ -11,8 +11,8 @@ var EmployeeModel = Backbone.Model.extend({
         firstName: "",
         lastName:"",
         sex: null,   //0 signifie mal //1 signifie miss, //null pas precisez
-        age: "1999-05-06",
-        countryBird:0,
+        age: "1996-06-06",
+        countryBird:"33",
         type: null, 
         isSelected: false,
     },
@@ -77,9 +77,10 @@ var ViewEmployee = Backbone.View.extend({
  */
 var ViewListEmployee = Backbone.View.extend({
     id:'table',
+    nbOfElemButPlus: 10,
 
     events:{
-        'click tr.line-employee': 'onClickItem',
+        'click tbody > tr': 'onClickItem',
         'click button#plus': 'addEmployee',
     },
 
@@ -91,8 +92,9 @@ var ViewListEmployee = Backbone.View.extend({
 
     addEmployee(event){
         let len = this.collection.length;
-        if(len <= 10){
-            this.collection.add(new EmployeeModel({id: len}));
+        if(len <= this.nbOfElemButPlus){
+            this.collection.add(new EmployeeModel({id: _.uniqueId()}));
+            // TODO monBouton.attr('disabled', true); // ou removeAttr pour enlever + skinner en CSS avec le pseudo sélecteur :disabled
             event.target.style.backgroundColor = 'white';
         }else{
             event.target.style.backgroundColor = 'grey';
@@ -100,21 +102,22 @@ var ViewListEmployee = Backbone.View.extend({
     },
 
     onClickItem(event){
-        let index = $('tr.line-employee').index(event.currentTarget);
+        let index = $(event.currentTarget).index();//  $('tr.line-employee').index(event.currentTarget);
         let modelSelected = this.collection.findWhere({isSelected: true});
-        if(modelSelected)
+        if(modelSelected) {
             modelSelected.set('isSelected', false);
+        }
         this.collection.at(index).set('isSelected', true); 
     },
 
     addTr(model){
         let view = new ViewEmployee({model:model});
-        this.$('table').append(view.render().$el);
+        this.$('tbody').append(view.render().$el);
     },
 
     render(){
         let content = `<table><caption>LISTES D'EMPLOYES</caption>`;
-        content += `<tr><th>id</th><th>Nom</th><th>Prenom</th><th>sex</th><th>Age</th><th>Country</th></tr>`;
+        content += `<thead><tr><th>id</th><th>Nom</th><th>Prenom</th><th>sex</th><th>Age</th><th>Country</th></tr></thead><tbody></tbody>`;
         content += `</table>`;
         content += `<button id="plus">+</button>`;
         this.$el.html(content);
@@ -130,9 +133,93 @@ var ViewListEmployee = Backbone.View.extend({
 //ListE.add(new EmployeeModel({id:0, firstName: "toto", lastName: "titi", sex: 0, countryBird:"OYEOYE"}));
 //ListE.add(new EmployeeModel({id:13, firstName: "RIEN", lastName: "titi", sex: 0, countryBird:"ANYWHERE"}));
 //ListE.add(new EmployeeModel({id:1, firstName: "tata", lastName: "tutu", sex: 1, countryBird:"IYEIYE", age:26}));
-
-////////////////////////////////////////Type D'employer///////////////////////////////////////////////////
+////////////////////////////////////////Modification effectuez sur le typeEmploye/////////////////////////////////////////////////
 var TypeEmployee = Backbone.Model.extend({
+    defaults:{
+        class:null,
+        label:'',
+    }
+})
+
+var ListTypeEmployee = Backbone.Collection.extend({
+    model: TypeEmployee,
+})
+
+
+var Dev = EmployeeModel.extend({
+    defaults: _.extend({}, EmployeeModel.prototype.defaults,{
+        valeur: 1050,
+    }),
+})
+
+var Commercial = EmployeeModel.extend({
+    defaults: _.extend({}, EmployeeModel.prototype.defaults, {
+        valeur:0,
+    })
+})
+
+var ChefProject = EmployeeModel.extend({
+    defaults: _.extend({}, EmployeeModel.prototype.defaults,{
+        valeur: 0,
+    }),
+})
+
+
+var typeList = new ListTypeEmployee([{class:EmployeeModel, label:"select", id:0},{class: Dev, label:"Développeur", id:1}, {class: Commercial, label:"Commercial", id:2}, {class: ChefProject, label:"Chef de projet", id:3}]);
+///////////////////////////////model pays//////////////////////////////////////////////////////////////////
+var CountryModel = Backbone.Model.extend({
+    defaults:{
+        libelle:""
+    }
+})
+
+var CountryCollection = Backbone.Collection.extend({
+    model: CountryModel,
+})
+
+var lCountry = new CountryCollection([{libelle:"France", id:33}, {libelle:"Guinee", id:224}, {libelle:"toto", id:0}]);
+////////////////////////////////////////Type D'employer///////////////////////////////////////////////////
+
+// début pierre
+/*
+var TypeEmployee2 = Backbone.Model.extend({
+    defaults: {
+        class: null,
+        label: ''
+    }
+});
+// [ new TypeEmployee2({ class: Dev, label: "Développeur", id: 1 }) ] ...
+
+// Sur changement de type d'employé :
+
+monEmploye = new monTypeDemployee.get('class')(); // <-- new Dev() / new CDP / new Commercial
+
+var Dev = Employee.extend({
+    defaults: {
+        nbLignesDeCode: 0
+    }
+});
+
+// Dans formulaire:
+switch(typeEmployee) {
+    case 'dev' :
+
+    // Affichage de la sous-partie dev.
+}
+
+render() {
+
+
+    var $select = $('<select>');
+    _.each(typesEmployees, (pType) => { $select.append('<option value="' + pType.id + '">' + pType.get('label') + '</option>' ); });
+    $select.val(this.model.get('type'));
+}
+
+// fin pierre*/
+
+
+
+/*var TypeEmployee = Backbone.Model.extend({
     defaults:{
         title: "",
         valeur:0,
@@ -147,7 +234,7 @@ var TypeEmployee = Backbone.Model.extend({
 })
 /**
  * type developpeur
- */
+ *
 var Dev = TypeEmployee.extend({
     initialize(){
         this.set('title', 'Développeurs');
@@ -157,7 +244,7 @@ var Dev = TypeEmployee.extend({
 })
 /**
  * type chef de projet
- */
+ *
 var ChefProject = TypeEmployee.extend({
     initialize(){
         this.set('title', 'Chef de projet');
@@ -166,7 +253,7 @@ var ChefProject = TypeEmployee.extend({
 })
 /**
  * type commerciaux
- */
+ *
 var Commercial = TypeEmployee.extend({
     initialize(){
         this.set('title', 'Commerciaux');
@@ -207,7 +294,7 @@ var ViewTypeOption = Backbone.View.extend({
 
 /**
  * l'evenement change n'est appliqué que sur select input ou textarea
- */
+ *
 var ViewTypeSelect = Backbone.View.extend({
     tagName: 'select',
 
@@ -226,7 +313,7 @@ var ViewTypeSelect = Backbone.View.extend({
         this.$el.append(view.render().$el);
     },
 
-    onClickItem(e){
+    onClickItem(event){
         let index = parseInt($(event.target).val());
         var select = this.collection.findWhere({isSelected: true});
         if(select){
@@ -238,7 +325,7 @@ var ViewTypeSelect = Backbone.View.extend({
     render(){
         return this;
     },
-})
+})*/
 
 //var collectop = new CollectionType();
 //var viewSelect = new ViewTypeSelect({collection: collectop});
@@ -252,16 +339,56 @@ var ViewForm = Backbone.View.extend({
 
     events:{
         'click #send': 'updateModel',
+        'change select.type': 'clickOnItemOption',
     },
     
     initialize(){
-        _.bindAll(this,'render', 'setModel', 'updateModel', 'updateForm');
-        this.select = null;
+        _.bindAll(this,'render','setListType', 'setModel', 'updateModel', 'updateForm', 'setListeCountry');
+        this.listenTo()
+        this.listType = null;
+        this.lcountry = null;
         this.isEdit = false;
     },
 
-    setViewSelect(pview){
-        this.select = pview;
+    /**
+     * lier la vue a la collection de pays
+     * @param {*} pLCountry liste de pays
+     */
+    setListeCountry(pLCountry){
+        this.lcountry = pLCountry;
+    },
+
+    /**
+     * gestion du click sur le type demploye
+     * @param {*} ev 
+     */
+    clickOnItemOption(ev){
+        let valueOfOption = parseInt($(ev.target).val());
+        let typeSelect = this.listType.at(valueOfOption);
+        let select = this.$('select.type');
+        let label = this.$('label.type');
+        let input = this.$('input.type');
+        if(label){
+            label.remove();
+            input.remove();
+        }
+        switch(typeSelect.get('class')){
+            case Dev:
+                select.after(`<br/><label class="type">Nombre de ligne de code</label><input class="type" type="number"/><br/>`);
+                break;
+            case Commercial:
+                select.after(`<br/><label class="type">Nombre de compte client</label><input class="type" type="number"/><br/>`);
+                break;
+            case ChefProject:
+                select.after(`<br/><label class="type">Nombre de chiffre d'affaire</label><input class="type" type="number"/><br/>`);
+                break;
+            default:
+                return ;
+        }
+    },
+
+    setListType(pLType){
+        this.listType = pLType;
     },
 
     setModel(pModel){
@@ -279,7 +406,9 @@ var ViewForm = Backbone.View.extend({
             sex: parseInt(this.$('input[name=sex]:checked').val()),
             age: this.$('#date').val(),
             countryBird: this.$('#country').val(),
-            type: this.select.collection.findWhere({isSelected: true}).set('valeur', parseInt(this.$('input[class=type]').val())),
+            type: type ? type.set('valeur', parseInt(this.$('input[class=type]').val())) : null,
+            // Ajout PM : 
+            // type: this.$('select.type').val() || null
         };
         this.model.set(attr);
     },
@@ -290,27 +419,38 @@ var ViewForm = Backbone.View.extend({
         this.$('#prenom').val(this.model.get('lastName'));
         this.$(`input[name=sex][value=${this.model.get('sex')}]`).attr('checked', true);
         this.$('#date').val(this.model.get('age'));  //la date est dans un format yyyy-MM-JJ;
-        this.$('#country').val(this.model.get('countryBird'));
+        this.$(`select.country option[value=${this.model.get('countryBird')}]`).prop('selected', true);
         let type = this.model.get('type');
         if(type){
-            this.$('div#form select').val(type.get('index'));
-            type.set('isSelected', true);
-            this.$('label.type + input.type').val(type.get('valeur'));
+            this.$(`select.type option[value=${this.model.get('type').get('id')}]`).prop('selected', true);
+            this.$(`select.type option[value=${this.model.get('type').get('id')}]`).change();
+            this.$('input.type').val(this.model.get('valeur'));
         }
     },
 
     render(){
         if(!this.isEdit){
             let content = '<form>';
-            content += '<label>ID</label><input id="id" disabled value="1" type="text"/><br/>';
+            content += '<label>ID</label><input id="id" disabled type="text"/><br/>';
             content += '<label>Nom</label><input id="nom" type="text"/><br/><label>Prenom</label><input id="prenom" type="text"/><br/>';
             content += '<label class="sex">M</label><input type="radio" name="sex" value="1"/><label class="sex">F</label><input type="radio" name="sex" value="0"/>';
             content += '<br/><label>Date de Naissance</label><input id="date" type="date"/><br/>';
-            content += '<label>Country</label><input id="country" type="text"/><br/><label>Type d employeé</label>';
+            content += '<label class="country">Country</label><br/><label>Type d employeé</label>';
             content += '<button id="send">send</button>';
             content += '</form>';
             this.$el.html(content);
-            this.$('#send').before(this.select.render().el);
+            let $select2 = $('<select class="country">');
+            this.lcountry.each((pCountry)=>{
+                $select2.append(`<option value="${pCountry.get('id')}">${pCountry.get('libelle')}</option>`);
+            });
+            this.$('label.country').after($select2);
+            let $select1 = $('<select class="type">');
+            let l = this.listType;
+            this.listType.each((pType)=>{
+                $select1.append(`<option value="${pType.get('id')}">${pType.get('label')}</option>`);
+            })
+            this.$('#send').before($select1);
+            // TODO Switch sur le type d'employé pour rajouter les sous-éléments spécifiques.
         }else{
             this.updateForm();
         }
@@ -319,6 +459,8 @@ var ViewForm = Backbone.View.extend({
 })
 
 //var viewform = new ViewForm();
+//viewform.setListType(typeList);
+//viewform.setListeCountry(lCountry);
 //$('body').append(viewform.render().$el);
 //////////////////////////////////////////////////////////////////////////////////////
 /**
@@ -332,24 +474,20 @@ var AppView = Backbone.View.extend({
         _.bindAll(this, 'render');
         this.employeeCollection = new EmployeesCollection();
         this.viewEmployee = new ViewListEmployee({collection: this.employeeCollection});
-        this.typeCollection = new CollectionType();
-        this.viewSelect = new ViewTypeSelect({collection: this.typeCollection});
-        this.initType(this.typeCollection);
+        this.typeCollection = new ListTypeEmployee([{class:EmployeeModel, label:"select", id:0},{class: Dev, label:"Développeur", id:1}, 
+                                                    {class: Commercial, label:"Commercial", id:2}, {class: ChefProject, label:"Chef de projet", id:3}]);
+        this.countryCollection = new CountryCollection([{libelle:"France", id:33}, {libelle:"Guinee", id:224}, {libelle:"toto", id:0}]);
         this.viewForm = new ViewForm();
-        this.viewForm.setViewSelect(this.viewSelect);
+        this.viewForm.setListType(this.typeCollection);
+        this.viewForm.setListeCountry(this.countryCollection);
         this.listenTo(this.employeeCollection, 'change:isSelected', this.viewForm.setModel);
     },
 
     initEmployee(collection){
-        collection.add(new EmployeeModel({id:0, firstName: "toto", lastName: "titi", sex: 0, countryBird:"OYEOYE"}));
-        collection.add(new EmployeeModel({id:13, firstName: "RIEN", lastName: "titi", sex: 0, countryBird:"ANYWHERE"}));
-        collection.add(new EmployeeModel({id:1, firstName: "tata", lastName: "tutu", sex: 1, countryBird:"IYEIYE"}));
-    },
-
-    initType(collection){
-        collection.add(new Dev());
-        collection.add(new ChefProject());
-        collection.add(new Commercial());
+        // collection.reset([ {id:0, firstName: "toto", lastName: "titi", sex: 0, countryBird:"OYEOYE"},   ]);
+        collection.add(new Dev({id:0, firstName: "toto", lastName: "titi", sex: 0, countryBird:"33"}));
+        collection.add(new EmployeeModel({id:13, firstName: "RIEN", lastName: "titi", sex: 0, countryBird:"0"}));
+        collection.add(new EmployeeModel({id:1, firstName: "tata", lastName: "tutu", sex: 1, countryBird:"224"}));
     },
 
     render(){
@@ -368,21 +506,11 @@ var AppView = Backbone.View.extend({
                 $('#poubelle').css('border', '2px dashed green');
             }
         })
-        return this;
+        return this; 
     }
 })
 
 var app = new AppView();
 $('body').append(app.render().$el);
 app.initEmployee(app.employeeCollection);
-//app.drag($('tr.line-employee'));
-
-/**
- * Probleme restant à gerer 
- * -gestion d'id unique pour une personne 
- * -gestion d'affichage de pays dans la liste
- * -gestion d'affichage dans le formulaire lors d'une modification
- * Solution envisageable
- *      -pour les pays l'identifiant du pays stocké dans la liste deroulante comme valeur {juste que au niveau du tableau on aura un numero}
- *      -
- */
+//app.drag($('tr.line-employee'));*/

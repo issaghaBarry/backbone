@@ -49,3 +49,6 @@ button#send{
     position: relative;
     left: 200px;;
 }
+select{
+    margin-bottom: 10px;
+}

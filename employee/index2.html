@@ -13,8 +13,9 @@
     <title>Document</title>
 </head>
 <body>
-    
+    <label for="toto">toto</label><input type="radio" name="toto" id="toto"/>
     <div id="pou">
+        <p>bien venue aw</p>
     <img id="poubelle" src="img/poubelle.jpg" width="100" height="100"/>
     </div>
     <img id="poubel" src="img/moi.jpg" width="100" height="100"/>
@@ -27,6 +28,7 @@
         </tr>
     </table>
     <script>
+    $('input').checkboxradio();
     $('#poubel').draggable({
         revert: 'invalid',
         start: (ev, ui)=>{
