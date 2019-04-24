@@ -11,10 +11,24 @@ var EmployeeModel = Backbone.Model.extend({
         firstName: "",
         lastName:"",
         sex: null,   //0 signifie mal //1 signifie miss, //null pas precisez
-        age: "1996-06-06",
+        dateBirth: 745027200000,
         countryBird:"33",
         type: null, 
         isSelected: false,
+    },
+
+    getAge() {
+        return (Date.now() - this.get('dateBirth')) / 86400000 / 365;
+
+
+
+
+        let hourInSecond = 86400000;
+        let today = Date.now();
+        let dateInDayInS = miliseconde/hourInSecond;
+        let todayinS = today/hourInSecond
+        let date = todayinS - dateInDayInS;
+        return date/365;
     },
 
     toggleSelected(){
@@ -36,8 +50,9 @@ var ViewEmployee = Backbone.View.extend({
     tagName: 'tr',
     className: 'line-employee',
 
-    initialize(){
+    initialize(options) {
         _.bindAll(this, 'render');
+        this.countries = options.countries;
         this.listenTo(this.model, 'change', this.render);
         this.listenTo(this.model, 'remove', ()=>{this.$el.remove()});
         this.$el.draggable({
@@ -65,8 +80,8 @@ var ViewEmployee = Backbone.View.extend({
             pictos = '&#9794'
         }
         content += `<td class="prenom">${pictos}</td>`;
-        content += `<td class="prenom">${this.model.get('age')}</td>`;
-        content += `<td class="prenom">${this.model.get('countryBird')}</td>`;
+        content += `<td class="prenom">${ Math.ceil(this.model.getAge()).toString() + ' ans'}</td>`;
+        content += `<td class="prenom">${this.countries.get(this.model.get('countryBird')).get('libelle')}</td>`;
         this.$el.html(content);
         return this;
     },
@@ -84,8 +99,9 @@ var ViewListEmployee = Backbone.View.extend({
         'click button#plus': 'addEmployee',
     },
 
-    initialize(){
+    initialize(options){
         _.bindAll(this, 'render');
+        this.countries = options.countries;
         this.listenTo(this.collection, 'add', this.addTr);
         this.$el.data('collection', this.collection);
     },
@@ -111,7 +127,7 @@ var ViewListEmployee = Backbone.View.extend({
     },
 
     addTr(model){
-        let view = new ViewEmployee({model:model});
+        let view = new ViewEmployee({model:model, countries : this.countries });
         this.$('tbody').append(view.render().$el);
     },
 
@@ -342,20 +358,13 @@ var ViewForm = Backbone.View.extend({
         'change select.type': 'clickOnItemOption',
     },
     
-    initialize(){
-        _.bindAll(this,'render','setListType', 'setModel', 'updateModel', 'updateForm', 'setListeCountry');
+    initialize(options){
+        _.bindAll(this,'render','setModel', 'updateModel', 'updateForm');
         this.listenTo()
-        this.listType = null;
-        this.lcountry = null;
+        this.listType = options.listTypes;
+        this.lcountry = options.countries;
+        this.employees = options.employees;
         this.isEdit = false;
-    },
-
-    /**
-     * lier la vue a la collection de pays
-     * @param {*} pLCountry liste de pays
-     */
-    setListeCountry(pLCountry){
-        this.lcountry = pLCountry;
     },
 
     /**
@@ -365,31 +374,37 @@ var ViewForm = Backbone.View.extend({
     clickOnItemOption(ev){
         let valueOfOption = parseInt($(ev.target).val());
         let typeSelect = this.listType.at(valueOfOption);
-        let select = this.$('select.type');
-        let label = this.$('label.type');
-        let input = this.$('input.type');
-        if(label){
-            label.remove();
-            input.remove();
+        if(this.model){
+            this.model.set('type', typeSelect.get('id')); 
         }
-        switch(typeSelect.get('class')){
-            case Dev:
-                select.after(`<br/><label class="type">Nombre de ligne de code</label><input class="type" type="number"/><br/>`);
-                break;
-            case Commercial:
-                select.after(`<br/><label class="type">Nombre de compte client</label><input class="type" type="number"/><br/>`);
-                break;
-            case ChefProject:
-                select.after(`<br/><label class="type">Nombre de chiffre d'affaire</label><input class="type" type="number"/><br/>`);
-                break;
-            default:
-                return ;
-        }
+        this.manageAdditionalData();
     },
 
-    setListType(pLType){
-        this.listType = pLType;
-    },
+    manageAdditionalData() {
+        if(!this.model) {return ;}
+        let theRealType = this.listType.get(this.model.get('type'));
+        this.$('.additional-data').remove();
+        if(!theRealType) { return; }
+        let $additionalData = $('<div class="additional-data"></div>');
+        switch(theRealType.get('class')){
+            case Dev:
+                $additionalData.html(`<label class="type">Nombre de ligne de code</label><input class="type" type="number"/>`);
+            break;
+            case Commercial:
+            $additionalData.html(`<label class="type">Nombre de compte client</label><input class="type" type="number"/>`);
+            break;
+            case ChefProject:
+            $additionalData.html(`<label class="type">Nombre de chiffre d'affaire</label><input class="type" type="number"/>`);
+            break;
+            default:
+            return ;
+        }
+        this.$('button').before($additionalData);
+        this.$('button').before("<br class='additional-data'/>");
+        this.$('.additional-data').before("<br class='additional-data'/>");
+   },
+
+    
 
     setModel(pModel){
         this.model = pModel;
@@ -399,18 +414,26 @@ var ViewForm = Backbone.View.extend({
 
     updateModel(ev){
         ev.preventDefault();
+        let valtype = this.$('select.type option:selected').val()
+        
+        let dateInMili = new Date(this.$('#date').val());
         let attr = {
             id: this.$('#id').val(),
             firstName: this.$('#nom').val(),
             lastName: this.$('#prenom').val(),
             sex: parseInt(this.$('input[name=sex]:checked').val()),
-            age: this.$('#date').val(),
-            countryBird: this.$('#country').val(),
-            type: type ? type.set('valeur', parseInt(this.$('input[class=type]').val())) : null,
+            age: dateInMili.getTime(),
+            countryBird: this.$('select.country option:selected').val(),
+            valeur: this.$('input.type').val(),
+            type:valtype,
             // Ajout PM : 
             // type: this.$('select.type').val() || null
         };
-        this.model.set(attr);
+        let typeclas = this.listType.get(attr.type).get('class');
+        let typeEmploye = new typeclas(this.model.toJSON());
+        typeEmploye.set(attr);
+        this.employees.remove(this.model);
+        this.employees.add(typeEmploye);
     },
 
     updateForm(){
@@ -419,41 +442,40 @@ var ViewForm = Backbone.View.extend({
         this.$('#prenom').val(this.model.get('lastName'));
         this.$(`input[name=sex][value=${this.model.get('sex')}]`).attr('checked', true);
         this.$('#date').val(this.model.get('age'));  //la date est dans un format yyyy-MM-JJ;
-        this.$(`select.country option[value=${this.model.get('countryBird')}]`).prop('selected', true);
+        // this.$(`select.country option[value=${this.model.get('countryBird')}]`).prop('selected', true);
+        this.$('select.country').val(this.model.get('countryBird'));
         let type = this.model.get('type');
         if(type){
-            this.$(`select.type option[value=${this.model.get('type').get('id')}]`).prop('selected', true);
-            this.$(`select.type option[value=${this.model.get('type').get('id')}]`).change();
+            this.$('select.type').val(this.model.get('type'));
+        
             this.$('input.type').val(this.model.get('valeur'));
         }
     },
 
     render(){
-        if(!this.isEdit){
-            let content = '<form>';
-            content += '<label>ID</label><input id="id" disabled type="text"/><br/>';
-            content += '<label>Nom</label><input id="nom" type="text"/><br/><label>Prenom</label><input id="prenom" type="text"/><br/>';
-            content += '<label class="sex">M</label><input type="radio" name="sex" value="1"/><label class="sex">F</label><input type="radio" name="sex" value="0"/>';
-            content += '<br/><label>Date de Naissance</label><input id="date" type="date"/><br/>';
-            content += '<label class="country">Country</label><br/><label>Type d employeé</label>';
-            content += '<button id="send">send</button>';
-            content += '</form>';
-            this.$el.html(content);
-            let $select2 = $('<select class="country">');
-            this.lcountry.each((pCountry)=>{
-                $select2.append(`<option value="${pCountry.get('id')}">${pCountry.get('libelle')}</option>`);
-            });
-            this.$('label.country').after($select2);
-            let $select1 = $('<select class="type">');
-            let l = this.listType;
-            this.listType.each((pType)=>{
-                $select1.append(`<option value="${pType.get('id')}">${pType.get('label')}</option>`);
-            })
-            this.$('#send').before($select1);
-            // TODO Switch sur le type d'employé pour rajouter les sous-éléments spécifiques.
-        }else{
-            this.updateForm();
-        }
+        let content = '<form>';
+        content += '<label>ID</label><input id="id" disabled type="text"/><br/>';
+        content += '<label>Nom</label><input id="nom" type="text"/><br/><label>Prenom</label><input id="prenom" type="text"/><br/>';
+        content += '<label class="sex">M</label><input type="radio" name="sex" value="1"/><label class="sex">F</label><input type="radio" name="sex" value="0"/>';
+        content += '<br/><label>Date de Naissance</label><input id="date" type="date"/><br/>';
+        content += '<label class="country">Country</label><br/><label>Type d employeé</label>';
+        content += '<button id="send">send</button>';
+        content += '</form>';
+        this.$el.html(content);
+        let $select2 = $('<select class="country">');
+        this.lcountry.each((pCountry)=>{
+            $select2.append(`<option value="${pCountry.get('id')}">${pCountry.get('libelle')}</option>`);
+        });
+        this.$('label.country').after($select2);
+        let $select1 = $('<select class="type">');
+        let l = this.listType;
+        this.listType.each((pType)=>{
+            $select1.append(`<option value="${pType.get('id')}">${pType.get('label')}</option>`);
+        })
+        this.$('#send').before($select1);
+        if(!this.model) { return this; }
+        this.manageAdditionalData();
+        this.updateForm();
         return this;
     }
 })
@@ -473,21 +495,21 @@ var AppView = Backbone.View.extend({
     initialize(){
         _.bindAll(this, 'render');
         this.employeeCollection = new EmployeesCollection();
-        this.viewEmployee = new ViewListEmployee({collection: this.employeeCollection});
         this.typeCollection = new ListTypeEmployee([{class:EmployeeModel, label:"select", id:0},{class: Dev, label:"Développeur", id:1}, 
                                                     {class: Commercial, label:"Commercial", id:2}, {class: ChefProject, label:"Chef de projet", id:3}]);
         this.countryCollection = new CountryCollection([{libelle:"France", id:33}, {libelle:"Guinee", id:224}, {libelle:"toto", id:0}]);
-        this.viewForm = new ViewForm();
-        this.viewForm.setListType(this.typeCollection);
-        this.viewForm.setListeCountry(this.countryCollection);
+
+
+        this.viewEmployee = new ViewListEmployee({collection: this.employeeCollection, countries:  this.countryCollection });
+        this.viewForm = new ViewForm({ listTypes: this.typeCollection, countries:  this.countryCollection, employees: this.employeeCollection});
         this.listenTo(this.employeeCollection, 'change:isSelected', this.viewForm.setModel);
     },
 
     initEmployee(collection){
         // collection.reset([ {id:0, firstName: "toto", lastName: "titi", sex: 0, countryBird:"OYEOYE"},   ]);
-        collection.add(new Dev({id:0, firstName: "toto", lastName: "titi", sex: 0, countryBird:"33"}));
-        collection.add(new EmployeeModel({id:13, firstName: "RIEN", lastName: "titi", sex: 0, countryBird:"0"}));
-        collection.add(new EmployeeModel({id:1, firstName: "tata", lastName: "tutu", sex: 1, countryBird:"224"}));
+        collection.add(new Dev({id:0, firstName: "toto", lastName: "titi", sex: 0, countryBird:"33", type: 0}));
+        collection.add(new EmployeeModel({id:13, firstName: "RIEN", lastName: "titi", sex: 0, countryBird:"0", type: 1}));
+        collection.add(new EmployeeModel({id:1, firstName: "tata", lastName: "tutu", sex: 1, countryBird:"224", type : 2}));
     },
 
     render(){

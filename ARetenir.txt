@@ -1,0 +1,4 @@
+-----A retenir en backbone ____________________
+-separer les données des views,
+-separer la modification des données avec leur application sur la view
+-un model se trouvant dans une collection possede une reference de cette collection dans ces methodes
